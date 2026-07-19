@@ -10,8 +10,12 @@ export type LessonChatContext = {
   lessonTitle: string;
   stepTitle: string;
   stepIntro: string;
+  stepIndex: number;
+  stepCount: number;
   hotspotLabel?: string;
   hotspotAction?: string;
+  hotspotWhy?: string;
+  completedCount: number;
 };
 
 const QUICK_ASKS = [
@@ -22,11 +26,19 @@ const QUICK_ASKS = [
   "How do I know I did it correctly?",
 ];
 
-export function AiInstructorChat({ context }: { context: LessonChatContext }) {
+export function AiInstructorChat({
+  context,
+  seed,
+  onSeedConsumed,
+}: {
+  context: LessonChatContext;
+  seed?: string;
+  onSeedConsumed?: () => void;
+}) {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
-      content: `I'm right here beside you. Ask me anything about "${context.stepTitle}" — or tap one of the quick questions below.`,
+      content: `I'm right here beside you on "${context.stepTitle}". Ask me anything — I'll keep our place in the lesson.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -36,6 +48,15 @@ export function AiInstructorChat({ context }: { context: LessonChatContext }) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // If a seed comes in from the lesson viewer (e.g. tapping "Ask AI" on a hotspot),
+  // pre-fill the composer so the learner can hit send or edit first.
+  useEffect(() => {
+    if (seed) {
+      setInput(seed);
+      onSeedConsumed?.();
+    }
+  }, [seed, onSeedConsumed]);
 
   async function send(text: string) {
     if (!text.trim() || streaming) return;
@@ -83,7 +104,7 @@ export function AiInstructorChat({ context }: { context: LessonChatContext }) {
           }
         }
       }
-    } catch (e) {
+    } catch {
       setMessages((m) => {
         const copy = [...m];
         copy[copy.length - 1] = {
@@ -104,10 +125,11 @@ export function AiInstructorChat({ context }: { context: LessonChatContext }) {
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-ember to-primary shadow-glow">
           <Sparkles className="h-4 w-4 text-primary-foreground" />
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="font-serif text-lg leading-none">Sensei</div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Live · context-aware
+          <div className="truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Step {context.stepIndex}/{context.stepCount} · {context.stepTitle}
+            {context.hotspotLabel ? ` · ${context.hotspotLabel}` : ""}
           </div>
         </div>
       </div>

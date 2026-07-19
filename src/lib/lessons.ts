@@ -7,15 +7,68 @@ import catKitchen from "@/assets/cat-kitchen.jpg";
 import catWood from "@/assets/cat-woodshop.jpg";
 import catElectronics from "@/assets/cat-electronics.jpg";
 
+import demoFiller from "@/assets/demo-filler-cap.mp4.asset.json";
+import demoDrain from "@/assets/demo-drain-plug.mp4.asset.json";
+import demoCatch from "@/assets/demo-catch-pan.mp4.asset.json";
+import demoFilter from "@/assets/demo-oil-filter.mp4.asset.json";
+import demoGasket from "@/assets/demo-gasket.mp4.asset.json";
+import demoFunnel from "@/assets/demo-funnel.mp4.asset.json";
+import demoPour from "@/assets/demo-pour.mp4.asset.json";
+import demoDipstick from "@/assets/demo-dipstick.mp4.asset.json";
+import demoTowel from "@/assets/demo-towel.mp4.asset.json";
+
+/**
+ * Demonstration engine — pluggable so future versions can add
+ * AI-generated clips, 3D/WebGL scenes, or realtime avatars without
+ * changing the lesson viewer or lesson data schema.
+ */
+export type Demonstration =
+  | {
+      kind: "video";
+      src: string;
+      /** Approx seconds — used for the progress bar. */
+      duration: number;
+      /** Optional ambient sound cue. */
+      sound?: string;
+      poster?: string;
+    }
+  | {
+      kind: "scene-zoom";
+      scene: string;
+      x: number;
+      y: number;
+      duration: number;
+    }
+  | {
+      /** Reserved for future runtime AI-generated demos. */
+      kind: "ai-generated";
+      prompt: string;
+      duration: number;
+    }
+  | {
+      /** Reserved for future 3D/WebGL interactive scenes. */
+      kind: "scene-3d";
+      sceneId: string;
+    };
+
 export type Hotspot = {
   id: string;
   label: string;
   /** Percent coordinates within the scene image (0-100) */
   x: number;
   y: number;
+  /** Short imperative — appears as the demo caption. */
   action: string;
-  detail: string;
+  /** The demonstration to play when the hotspot is tapped. */
+  demo: Demonstration;
+  /** One-sentence explanation of why this action matters. */
   why: string;
+  /** 1-3 short coaching tips, one line each. */
+  tips?: string[];
+  /** A single safety warning if relevant. */
+  warning?: string;
+  /** The most common mistake learners make. */
+  mistake?: string;
 };
 
 export type LessonStep = {
@@ -58,37 +111,38 @@ export const OIL_CHANGE_LESSON: Lesson = {
       scene: scene1,
       duration: "3 min",
       intro:
-        "You are standing at the front of the car with the hood already open. Before we touch anything, orient yourself. Tap any component to have me demonstrate what it is and why it matters.",
+        "Orient yourself. Tap any glowing point to watch it demonstrated.",
       hotspots: [
         {
           id: "engine",
           label: "Engine block",
           x: 50,
           y: 60,
-          action: "Point out the engine",
-          detail:
-            "This is a 3.0L V6. The oil we're about to change lubricates every moving surface inside it — bearings, cams, piston walls.",
-          why: "Knowing where the engine sits helps you visualize where the oil travels once you pour it in.",
+          action: "This is the V6 engine",
+          demo: { kind: "scene-zoom", scene: scene1, x: 50, y: 60, duration: 4 },
+          why: "The oil you're about to change lubricates every moving surface inside it.",
+          tips: ["3.0L V6 — 5.2 quarts total capacity", "Runs quiet when the oil is fresh"],
         },
         {
           id: "filler",
           label: "Oil filler cap",
           x: 42,
           y: 46,
-          action: "Rotate the filler cap counter-clockwise",
-          detail:
-            "Twist the yellow cap a quarter turn counter-clockwise and lift it off. Set it on a clean rag — never on the fender lip.",
-          why: "Opening the filler cap first lets air into the crankcase so oil drains faster and more completely.",
+          action: "Twist the filler cap off",
+          demo: { kind: "video", src: demoFiller.url, duration: 5 },
+          why: "Opening the filler first lets air in so oil drains faster.",
+          tips: ["Quarter turn counter-clockwise", "Set it on a clean rag"],
+          mistake: "Resting the cap on the fender lip — it rolls into the engine bay.",
         },
         {
           id: "battery",
           label: "12V battery",
           x: 18,
           y: 48,
-          action: "Identify the battery terminals",
-          detail:
-            "Red positive on the left, black negative to the right. Not touched during an oil change, but always know where it is.",
-          why: "Awareness of nearby electrical sources prevents accidental shorts if a wrench slips.",
+          action: "Locate the battery terminals",
+          demo: { kind: "scene-zoom", scene: scene1, x: 18, y: 48, duration: 4 },
+          why: "Knowing where live electricity sits prevents a wrench short.",
+          warning: "Never let a metal tool bridge the red and black terminals.",
         },
       ],
     },
@@ -97,28 +151,29 @@ export const OIL_CHANGE_LESSON: Lesson = {
       title: "Drain the old oil",
       scene: scene2,
       duration: "5 min",
-      intro:
-        "You are now under the car on a creeper. The oil pan is directly above you. We drain from the lowest point — the drain plug.",
+      intro: "You're under the car. We drain from the lowest point.",
       hotspots: [
         {
           id: "plug",
           label: "Drain plug",
           x: 50,
           y: 48,
-          action: "Loosen the drain plug counter-clockwise",
-          detail:
-            "Fit a 17mm socket over the plug. Break it loose with a firm counter-clockwise pull, then back it out by hand — the last thread is where oil starts rushing.",
-          why: "Hand-finishing prevents the plug from dropping into the hot oil pan below.",
+          action: "Break the drain plug loose",
+          demo: { kind: "video", src: demoDrain.url, duration: 5 },
+          why: "Finishing by hand keeps the plug from dropping into hot oil.",
+          tips: ["17mm socket", "Firm counter-clockwise pull, then hand-finish"],
+          warning: "Oil may be hot — 40°C is plenty to scald.",
+          mistake: "Wrenching all the way out — the plug drops into the pan.",
         },
         {
           id: "pan",
           label: "Catch pan",
           x: 50,
           y: 88,
-          action: "Position the catch pan",
-          detail:
-            "Slide the drain pan directly under the plug — offset it slightly toward you so the initial stream lands in the center.",
-          why: "Warm oil arcs forward as it drains; placement matters more than most people think.",
+          action: "Slide the catch pan into position",
+          demo: { kind: "video", src: demoCatch.url, duration: 5 },
+          why: "Warm oil arcs forward as it drains — placement matters.",
+          tips: ["Offset slightly toward you", "Center under the plug"],
         },
         {
           id: "worklight",
@@ -126,9 +181,9 @@ export const OIL_CHANGE_LESSON: Lesson = {
           x: 10,
           y: 78,
           action: "Aim the work light",
-          detail:
-            "Rotate the LED light so it grazes across the pan. Shadow reveals leaks; direct light hides them.",
-          why: "Good lighting is the difference between spotting a stripped thread and finding a puddle tomorrow.",
+          demo: { kind: "scene-zoom", scene: scene2, x: 10, y: 78, duration: 4 },
+          why: "Grazing light reveals leaks that overhead light hides.",
+          tips: ["Aim it across the pan, not straight down"],
         },
       ],
     },
@@ -137,28 +192,29 @@ export const OIL_CHANGE_LESSON: Lesson = {
       title: "Swap the oil filter",
       scene: scene3,
       duration: "6 min",
-      intro:
-        "The old filter is holding a cup of dirty oil. We remove it carefully so nothing splashes back onto the exhaust.",
+      intro: "The old filter is holding a cup of oil. Remove it carefully.",
       hotspots: [
         {
           id: "filter",
           label: "Oil filter",
           x: 52,
           y: 44,
-          action: "Loosen the filter with the wrench",
-          detail:
-            "Snug the strap wrench around the filter. One steady counter-clockwise rotation until the seal breaks — then set the wrench aside and finish by hand.",
-          why: "Filter housings are thin steel. Overtightening the wrench crushes them and traps oil inside.",
+          action: "Break the filter loose",
+          demo: { kind: "video", src: demoFilter.url, duration: 5 },
+          why: "Filter housings are thin steel — overtightening crushes them.",
+          tips: ["One steady counter-clockwise rotation", "Finish by hand"],
+          mistake: "Cranking the wrench past break-loose and denting the can.",
         },
         {
           id: "gasket",
           label: "New filter gasket",
           x: 50,
           y: 68,
-          action: "Prime the gasket",
-          detail:
-            "Dip a fingertip in fresh oil and wipe it around the new filter's rubber gasket before spinning it on. Tighten by hand — three quarters of a turn past contact.",
-          why: "A dry gasket tears on first startup and dumps your fresh oil onto the driveway.",
+          action: "Prime the new gasket with oil",
+          demo: { kind: "video", src: demoGasket.url, duration: 5 },
+          why: "A dry gasket tears on first startup and dumps your fresh oil.",
+          tips: ["Fingertip of fresh oil", "One full circle around the rubber"],
+          mistake: "Forgetting the prime — the #1 cause of first-drive leaks.",
         },
       ],
     },
@@ -167,8 +223,7 @@ export const OIL_CHANGE_LESSON: Lesson = {
       title: "Refill with fresh oil",
       scene: scene4,
       duration: "4 min",
-      intro:
-        "Back on top of the car. We pour the new oil in through the filler port you opened earlier. Owner's manual says 5.2 quarts.",
+      intro: "Owner's manual says 5.2 quarts.",
       hotspots: [
         {
           id: "funnel",
@@ -176,9 +231,9 @@ export const OIL_CHANGE_LESSON: Lesson = {
           x: 78,
           y: 62,
           action: "Seat the funnel",
-          detail:
-            "Push the funnel firmly into the filler port. Wiggle it to seat the rubber ring — no gap, no drips.",
-          why: "Oil off the valve cover cooks and smells for weeks. A well-seated funnel prevents that.",
+          demo: { kind: "video", src: demoFunnel.url, duration: 5 },
+          why: "Oil on the valve cover cooks and smells for weeks.",
+          tips: ["Push firmly, wiggle to seat the ring"],
         },
         {
           id: "bottle",
@@ -186,9 +241,10 @@ export const OIL_CHANGE_LESSON: Lesson = {
           x: 68,
           y: 44,
           action: "Pour steadily",
-          detail:
-            "Hold the bottle at a 45° angle and pour in one smooth motion. Pause between quarts so air can escape.",
-          why: "Glug-glug pouring pressurizes the crankcase and pushes oil back out the funnel.",
+          demo: { kind: "video", src: demoPour.url, duration: 5 },
+          why: "Glug-glug pouring pressurizes the crankcase and backs oil up.",
+          tips: ["45° angle", "Pause between quarts so air can escape"],
+          mistake: "Pouring straight up — creates the glug and overflows.",
         },
       ],
     },
@@ -197,18 +253,18 @@ export const OIL_CHANGE_LESSON: Lesson = {
       title: "Verify the level",
       scene: scene5,
       duration: "4 min",
-      intro:
-        "Final check. Pull the dipstick, wipe it, seat it fully, then pull again and read the level. This is how you know you did it right.",
+      intro: "Pull, wipe, seat, pull again, read.",
       hotspots: [
         {
           id: "dipstick",
           label: "Dipstick",
           x: 66,
           y: 52,
-          action: "Read the oil level",
-          detail:
-            "Oil should sit between the two crosshatch marks — ideally right at the upper mark. Amber and clear means you're done.",
-          why: "Underfill starves the pump. Overfill foams the oil and blows past the seals. The window is narrow.",
+          action: "Pull the dipstick",
+          demo: { kind: "video", src: demoDipstick.url, duration: 5 },
+          why: "Oil should sit between the two crosshatch marks.",
+          tips: ["Amber and clear = done", "Aim for the upper mark"],
+          mistake: "Reading the first pull — always wipe and re-seat first.",
         },
         {
           id: "towel",
@@ -216,9 +272,9 @@ export const OIL_CHANGE_LESSON: Lesson = {
           x: 30,
           y: 66,
           action: "Wipe the dipstick",
-          detail:
-            "Wipe with a lint-free towel in one direction. Cotton fibers on the stick will end up circulating in the engine.",
-          why: "Clean readings depend on a clean stick. This is a five-second habit that pays off forever.",
+          demo: { kind: "video", src: demoTowel.url, duration: 5 },
+          why: "Cotton fibers left on the stick end up circulating inside.",
+          tips: ["Lint-free shop towel", "One direction, one stroke"],
         },
       ],
     },
