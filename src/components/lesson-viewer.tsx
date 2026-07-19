@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Lesson, Hotspot } from "@/lib/lessons";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AiInstructorChat, type LessonChatContext } from "./ai-instructor-chat";
+import { DemonstrationStage, type DemoStageHandle } from "./demonstration-stage";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,51 +14,68 @@ import {
   MessageCircle,
   ArrowLeft,
   Check,
-  Pause,
-  Play,
-  Zap,
+  Turtle,
+  HelpCircle,
+  AlertTriangle,
+  Lightbulb,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { saveProgress, toggleBookmark } from "@/lib/progress.functions";
-
-type Mode = "interactive" | "auto";
 
 export function LessonViewer({ lesson }: { lesson: Lesson }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [mode, setMode] = useState<Mode>("interactive");
   const [bookmarked, setBookmarked] = useState(false);
+  const [slowMo, setSlowMo] = useState(false);
+  const [demoEnded, setDemoEnded] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatSeed, setChatSeed] = useState<string | undefined>(undefined);
+  const stageRef = useRef<DemoStageHandle>(null);
 
   const step = lesson.steps[stepIdx];
-  const progress = Math.round(((stepIdx + (activeHotspot ? 0.5 : 0)) / lesson.steps.length) * 100);
+  const progress = Math.round((stepIdx / lesson.steps.length) * 100);
 
   const chatContext: LessonChatContext = useMemo(
     () => ({
       lessonTitle: lesson.title,
       stepTitle: step.title,
       stepIntro: step.intro,
+      stepIndex: stepIdx + 1,
+      stepCount: lesson.steps.length,
       hotspotLabel: activeHotspot?.label,
       hotspotAction: activeHotspot?.action,
+      hotspotWhy: activeHotspot?.why,
+      completedCount: completed.size,
     }),
-    [lesson.title, step, activeHotspot],
+    [lesson.title, lesson.steps.length, step, stepIdx, activeHotspot, completed],
   );
 
-  // Auto mode: pick next uncompleted hotspot every few seconds when paused
+  // Reset demo state whenever a new hotspot is opened
   useEffect(() => {
-    if (mode !== "auto" || activeHotspot) return;
-    const t = setTimeout(() => {
-      const next = step.hotspots.find((h) => !completed.has(`${step.id}:${h.id}`));
-      if (next) setActiveHotspot(next);
-    }, 900);
-    return () => clearTimeout(t);
-  }, [mode, activeHotspot, step, completed]);
+    setDemoEnded(false);
+    setSlowMo(false);
+  }, [activeHotspot?.id]);
+
+  function openHotspot(h: Hotspot) {
+    setActiveHotspot(h);
+  }
+
+  function closeHotspot() {
+    setActiveHotspot(null);
+  }
 
   function markHotspotComplete() {
     if (!activeHotspot) return;
     const key = `${step.id}:${activeHotspot.id}`;
     setCompleted((prev) => new Set(prev).add(key));
     setActiveHotspot(null);
+  }
+
+  function askAi(seed?: string) {
+    setChatSeed(seed);
+    setChatOpen(true);
   }
 
   async function goNext() {
@@ -116,28 +134,18 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant={mode === "auto" ? "default" : "outline"}
-            size="sm"
-            className="hidden sm:inline-flex"
-            onClick={() => setMode(mode === "auto" ? "interactive" : "auto")}
-          >
-            {mode === "auto" ? <Pause className="mr-1 h-3.5 w-3.5" /> : <Zap className="mr-1 h-3.5 w-3.5" />}
-            {mode === "auto" ? "Pause auto" : "Auto demo"}
-          </Button>
           <Button variant="outline" size="icon" onClick={onBookmark}>
             <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-ember text-ember" : ""}`} />
           </Button>
 
-          {/* Mobile chat sheet */}
-          <Sheet>
+          <Sheet open={chatOpen} onOpenChange={setChatOpen}>
             <SheetTrigger asChild>
               <Button size="icon" className="lg:hidden">
                 <MessageCircle className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full max-w-md p-0 sm:w-[420px]">
-              <AiInstructorChat context={chatContext} />
+              <AiInstructorChat context={chatContext} seed={chatSeed} onSeedConsumed={() => setChatSeed(undefined)} />
             </SheetContent>
           </Sheet>
         </div>
@@ -157,22 +165,49 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
       <div className="flex flex-1 flex-col lg:flex-row">
         {/* LESSON VIEWPORT */}
         <div className="relative flex-1 overflow-hidden bg-black">
-          <SceneStage
-            step={step}
-            activeHotspot={activeHotspot}
-            completedIds={completed}
-            onSelect={(h) => setActiveHotspot(h)}
-          />
+          {!activeHotspot ? (
+            <SceneStage
+              step={step}
+              completedIds={completed}
+              onSelect={openHotspot}
+            />
+          ) : (
+            <div className="relative h-[52vh] w-full sm:h-[62vh] lg:h-full">
+              <DemonstrationStage
+                ref={stageRef}
+                demo={activeHotspot.demo}
+                onEnded={() => setDemoEnded(true)}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
-          {/* Step intro card */}
+              {/* Demo caption */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 p-4 sm:p-6">
+                <div className="mx-auto flex max-w-2xl items-center justify-between">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-ember">
+                      Demonstration · {activeHotspot.label}
+                    </p>
+                    <h3 className="mt-1 font-serif text-2xl text-foreground drop-shadow">
+                      {activeHotspot.action}
+                    </h3>
+                  </div>
+                  {slowMo && (
+                    <span className="rounded-full border border-ember/40 bg-background/60 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-ember backdrop-blur">
+                      0.4× slow-mo
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step intro card — only when idle */}
           {!activeHotspot && (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 sm:p-6">
               <div className="pointer-events-auto mx-auto max-w-2xl rounded-2xl border border-border/50 bg-background/85 p-5 shadow-panel backdrop-blur-xl">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-ember">
-                    {step.duration} · Step {stepIdx + 1}
-                  </span>
-                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-ember">
+                  {step.duration} · Step {stepIdx + 1}
+                </span>
                 <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">
                   {step.title}
                 </h2>
@@ -181,50 +216,73 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
                 </p>
                 <p className="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-ember">
                   <span className="hotspot-dot inline-block h-2 w-2 rounded-full bg-ember" />
-                  Tap any glowing point to see it demonstrated
+                  Tap any glowing point to watch it done
                 </p>
               </div>
             </div>
           )}
 
-          {/* Hotspot demonstration overlay */}
+          {/* Post-demonstration action bar + coaching */}
           {activeHotspot && (
             <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-              <div className="mx-auto max-w-2xl rounded-2xl border border-ember/40 bg-background/90 p-6 shadow-panel backdrop-blur-xl">
-                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-ember">
-                  Demonstration · {activeHotspot.label}
-                </p>
-                <h3 className="mt-2 font-serif text-2xl">{activeHotspot.action}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-foreground">
-                  {activeHotspot.detail}
-                </p>
-                <div className="mt-4 rounded-lg border border-border/40 bg-surface/50 p-3">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-ember">
-                    Why it matters
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{activeHotspot.why}</p>
-                </div>
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex gap-2">
+              <div className="mx-auto max-w-2xl space-y-3">
+                {demoEnded && (
+                  <CoachingCard hotspot={activeHotspot} onAskWhy={() => askAi(`Why: ${activeHotspot.why}`)} />
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border/50 bg-background/90 p-3 shadow-panel backdrop-blur-xl">
+                  <div className="flex flex-wrap gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        // trigger a replay by briefly unsetting then reselecting
-                        const h = activeHotspot;
-                        setActiveHotspot(null);
-                        setTimeout(() => setActiveHotspot(h), 40);
+                        stageRef.current?.replay();
+                        setDemoEnded(false);
                       }}
                     >
                       <RotateCcw className="mr-1 h-3.5 w-3.5" /> Replay
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setActiveHotspot(null)}>
-                      Back
+                    <Button
+                      variant={slowMo ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const next = !slowMo;
+                        setSlowMo(next);
+                        stageRef.current?.setSlowMotion(next);
+                        stageRef.current?.replay();
+                        setDemoEnded(false);
+                      }}
+                    >
+                      <Turtle className="mr-1 h-3.5 w-3.5" /> Slow motion
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        askAi(`I'm on "${activeHotspot.label}" — ${activeHotspot.action}. `)
+                      }
+                    >
+                      <MessageCircle className="mr-1 h-3.5 w-3.5" /> Ask AI
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        askAi(`Why do we ${activeHotspot.action.toLowerCase()}?`)
+                      }
+                    >
+                      <HelpCircle className="mr-1 h-3.5 w-3.5" /> Why?
                     </Button>
                   </div>
-                  <Button size="sm" onClick={markHotspotComplete} className="shadow-glow">
-                    <Check className="mr-1 h-3.5 w-3.5" /> I did it
-                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={closeHotspot}>
+                      Back
+                    </Button>
+                    <Button size="sm" onClick={markHotspotComplete} className="shadow-glow">
+                      <Check className="mr-1 h-3.5 w-3.5" /> I did it
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -234,7 +292,11 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
         {/* SIDEBAR (desktop) */}
         <aside className="hidden w-[380px] shrink-0 flex-col border-l border-border/50 bg-surface/40 lg:flex xl:w-[420px]">
           <div className="flex-1 overflow-hidden">
-            <AiInstructorChat context={chatContext} />
+            <AiInstructorChat
+              context={chatContext}
+              seed={chatSeed}
+              onSeedConsumed={() => setChatSeed(undefined)}
+            />
           </div>
         </aside>
       </div>
@@ -242,7 +304,7 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
       {/* FOOTER STEP NAV */}
       <footer className="flex items-center justify-between border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6">
         <Button variant="ghost" onClick={goPrev} disabled={stepIdx === 0}>
-          <ChevronLeft className="mr-1 h-4 w-4" /> Previous step
+          <ChevronLeft className="mr-1 h-4 w-4" /> Previous
         </Button>
         <div className="flex items-center gap-1.5">
           {lesson.steps.map((s, i) => {
@@ -267,71 +329,115 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
           })}
         </div>
         <Button onClick={goNext} className="shadow-glow">
-          {stepIdx === lesson.steps.length - 1 ? "Finish" : "Next step"}
+          {stepIdx === lesson.steps.length - 1 ? "Finish" : "Next"}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </footer>
+    </div>
+  );
+}
 
-      <Play className="hidden" />
+function CoachingCard({
+  hotspot,
+  onAskWhy,
+}: {
+  hotspot: Hotspot;
+  onAskWhy: () => void;
+}) {
+  return (
+    <div className="animate-fade-in rounded-2xl border border-border/50 bg-background/90 p-4 shadow-panel backdrop-blur-xl">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          onClick={onAskWhy}
+          className="flex items-start gap-2 rounded-lg border border-border/40 bg-surface/50 p-2.5 text-left transition hover:border-ember/40"
+        >
+          <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-ember" />
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-ember">Why it matters</p>
+            <p className="mt-0.5 text-sm text-foreground">{hotspot.why}</p>
+          </div>
+        </button>
+
+        {hotspot.tips && hotspot.tips.length > 0 && (
+          <div className="flex items-start gap-2 rounded-lg border border-border/40 bg-surface/50 p-2.5">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ember" />
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-ember">Quick tips</p>
+              <ul className="mt-0.5 space-y-0.5 text-sm text-foreground">
+                {hotspot.tips.map((t) => (
+                  <li key={t}>· {t}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {hotspot.warning && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2.5 sm:col-span-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">Safety</p>
+              <p className="mt-0.5 text-sm text-foreground">{hotspot.warning}</p>
+            </div>
+          </div>
+        )}
+
+        {hotspot.mistake && (
+          <div className="flex items-start gap-2 rounded-lg border border-border/40 bg-surface/50 p-2.5 sm:col-span-2">
+            <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-ember" />
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-ember">Common mistake</p>
+              <p className="mt-0.5 text-sm text-foreground">{hotspot.mistake}</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 function SceneStage({
   step,
-  activeHotspot,
   completedIds,
   onSelect,
 }: {
   step: Lesson["steps"][number];
-  activeHotspot: Hotspot | null;
   completedIds: Set<string>;
   onSelect: (h: Hotspot) => void;
 }) {
-  const zoomStyle = activeHotspot
-    ? ({
-        "--zoom-x": `${activeHotspot.x}%`,
-        "--zoom-y": `${activeHotspot.y}%`,
-      } as React.CSSProperties)
-    : undefined;
-
   return (
     <div className="relative h-[52vh] w-full overflow-hidden sm:h-[62vh] lg:h-full">
       <img
-        key={step.id + (activeHotspot?.id ?? "")}
+        key={step.id}
         src={step.scene}
         alt={step.title}
-        className={`h-full w-full object-cover ${
-          activeHotspot ? "hotspot-zoom" : "ken-burns"
-        }`}
-        style={zoomStyle}
+        className="h-full w-full object-cover ken-burns"
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
-      {!activeHotspot &&
-        step.hotspots.map((h) => {
-          const done = completedIds.has(`${step.id}:${h.id}`);
-          return (
-            <button
-              key={h.id}
-              onClick={() => onSelect(h)}
-              aria-label={h.label}
-              className="group absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${h.x}%`, top: `${h.y}%` }}
+      {step.hotspots.map((h) => {
+        const done = completedIds.has(`${step.id}:${h.id}`);
+        return (
+          <button
+            key={h.id}
+            onClick={() => onSelect(h)}
+            aria-label={h.label}
+            className="group absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${h.x}%`, top: `${h.y}%` }}
+          >
+            <span
+              className={`relative flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                done ? "border-ember/60 bg-ember/40" : "border-ember bg-ember/70 hotspot-dot"
+              }`}
             >
-              <span
-                className={`relative flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                  done ? "border-ember/60 bg-ember/40" : "border-ember bg-ember/70 hotspot-dot"
-                }`}
-              >
-                {done && <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={4} />}
-              </span>
-              <span className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-background/90 px-2 py-1 text-[10px] font-medium opacity-0 shadow-panel backdrop-blur transition group-hover:opacity-100">
-                {h.label}
-              </span>
-            </button>
-          );
-        })}
+              {done && <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={4} />}
+            </span>
+            <span className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-background/90 px-2 py-1 text-[10px] font-medium opacity-0 shadow-panel backdrop-blur transition group-hover:opacity-100">
+              {h.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
