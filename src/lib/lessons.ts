@@ -353,7 +353,7 @@ const SEEDS: Seed[] = [
 
   // Construction / Trades
   { id: "trade-welding", title: "Weld a Basic MIG Bead", category: "Trades", level: "Intermediate", totalMinutes: 50, summary: "Set voltage and wire feed, run a clean stringer bead.", tools: ["MIG welder", "Helmet", "Gloves"], materials: ["Steel plate", "Wire spool"], rating: 4.8, studentsCompleted: 2100, tags: ["welding", "mig"], daysAgo: 8 },
-  { id: "trade-framing", title: "Frame an Interior Wall", category: "Construction", level: "Intermediate", totalMinutes: 90, summary: "Plates, studs, top plate — 16" on center, plumb and square.", tools: ["Circular saw", "Framing hammer", "Speed square"], materials: ["2x4 lumber", "Nails"], rating: 4.6, studentsCompleted: 1240, tags: ["framing", "wall"], daysAgo: 30 },
+  { id: "trade-framing", title: "Frame an Interior Wall", category: "Construction", level: "Intermediate", totalMinutes: 90, summary: "Plates, studs, top plate — 16 inches on center, plumb and square.", tools: ["Circular saw", "Framing hammer", "Speed square"], materials: ["2x4 lumber", "Nails"], rating: 4.6, studentsCompleted: 1240, tags: ["framing", "wall"], daysAgo: 30 },
 
   // Woodworking
   { id: "wood-dovetail", title: "Cut a Through Dovetail by Hand", category: "Woodworking", level: "Advanced", totalMinutes: 60, summary: "Chisel, mallet, patience — the joint that lasts a century.", tools: ["Dovetail saw", "Chisels", "Marking gauge"], materials: ["Hardwood board"], rating: 4.9, studentsCompleted: 1820, tags: ["joinery"], daysAgo: 15 },
