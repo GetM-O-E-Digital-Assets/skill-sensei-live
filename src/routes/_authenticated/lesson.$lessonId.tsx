@@ -1,12 +1,14 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { getLesson } from "@/lib/lessons";
+import { getLessonOrPreview } from "@/lib/lessons";
 import { LessonViewer } from "@/components/lesson-viewer";
 
 export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
   loader: ({ params }) => {
-    const lesson = getLesson(params.lessonId);
-    if (!lesson) throw notFound();
-    return { lesson };
+    try {
+      return getLessonOrPreview(params.lessonId);
+    } catch {
+      throw notFound();
+    }
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -28,8 +30,8 @@ export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
     <div className="flex min-h-screen items-center justify-center p-6 text-center">
       <div>
         <p className="font-mono text-xs uppercase tracking-widest text-ember">Not found</p>
-        <h1 className="mt-2 font-serif text-3xl">This lesson isn't available yet</h1>
-        <p className="mt-2 text-muted-foreground">Check back soon — new workshops open weekly.</p>
+        <h1 className="mt-2 font-serif text-3xl">This lesson isn't in the catalog</h1>
+        <p className="mt-2 text-muted-foreground">Try searching for a different skill.</p>
       </div>
     </div>
   ),
@@ -37,6 +39,18 @@ export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
 });
 
 function LessonPage() {
-  const { lesson } = Route.useLoaderData();
-  return <LessonViewer lesson={lesson} />;
+  const { lesson, preview } = Route.useLoaderData();
+  return (
+    <div>
+      {preview && (
+        <div className="border-b border-ember/30 bg-ember/10 py-2 text-center text-xs">
+          <span className="font-mono uppercase tracking-widest text-ember">Preview</span>
+          <span className="ml-2 text-muted-foreground">
+            Authored lesson coming soon — try the engine using our reference lesson.
+          </span>
+        </div>
+      )}
+      <LessonViewer lesson={lesson} />
+    </div>
+  );
 }
