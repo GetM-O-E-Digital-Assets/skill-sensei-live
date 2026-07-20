@@ -57,7 +57,7 @@ function SearchPage() {
                 key={c}
                 onClick={() =>
                   navigate({
-                    search: (prev) => ({ ...prev, category: c === "All" ? undefined : c }),
+                    search: { q, category: c === "All" ? undefined : c, sort },
                   })
                 }
                 className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
@@ -81,7 +81,7 @@ function SearchPage() {
           <select
             value={sort}
             onChange={(e) =>
-              navigate({ search: (prev) => ({ ...prev, sort: e.target.value }) })
+              navigate({ search: { q, category, sort: e.target.value } })
             }
             className="rounded-full border border-border/60 bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none"
           >
