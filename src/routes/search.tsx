@@ -57,7 +57,7 @@ function SearchPage() {
                 key={c}
                 onClick={() =>
                   navigate({
-                    search: { q, category: c === "All" ? undefined : c, sort },
+                    search: { q, category: c === "All" ? "" : c, sort },
                   })
                 }
                 className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
