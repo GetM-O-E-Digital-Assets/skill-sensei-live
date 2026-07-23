@@ -50,7 +50,7 @@ function GeneratedLessonPage() {
     retry: 0,
   });
 
-  if (isLoading || isFetching && !data) {
+  if (isLoading || (isFetching && !data)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-5 p-6 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-ember to-primary shadow-glow">
