@@ -30,7 +30,7 @@ function SearchPage() {
   const activeCategory = category || "All";
 
   const results = useMemo(() => {
-    const list = searchLessons(q ?? "", activeCategory);
+    const list = searchLessons(q, activeCategory);
     if (sort === "popular") return [...list].sort((a, b) => b.popularityScore - a.popularityScore);
     if (sort === "newest") return [...list].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     if (sort === "rating") return [...list].sort((a, b) => b.rating - a.rating);
