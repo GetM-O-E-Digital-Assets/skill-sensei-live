@@ -8,8 +8,8 @@ import { CATEGORIES, searchLessons } from "@/lib/lessons";
 import { useMemo } from "react";
 
 const searchSchema = z.object({
-  q: fallback(z.string().optional(), undefined),
-  category: fallback(z.string().optional(), undefined),
+  q: fallback(z.string(), "").default(""),
+  category: fallback(z.string(), "").default(""),
   sort: fallback(z.string(), "relevance").default("relevance"),
 });
 
@@ -27,10 +27,10 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q, category, sort } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const activeCategory = category ?? "All";
+  const activeCategory = category || "All";
 
   const results = useMemo(() => {
-    const list = searchLessons(q ?? "", activeCategory);
+    const list = searchLessons(q, activeCategory);
     if (sort === "popular") return [...list].sort((a, b) => b.popularityScore - a.popularityScore);
     if (sort === "newest") return [...list].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     if (sort === "rating") return [...list].sort((a, b) => b.rating - a.rating);
@@ -44,7 +44,7 @@ function SearchPage() {
 
       <section className="border-b border-border/40 bg-surface/20 py-10">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <SearchBar size="lg" initial={q ?? ""} />
+          <SearchBar size="lg" initial={q} />
         </div>
       </section>
 
@@ -57,7 +57,7 @@ function SearchPage() {
                 key={c}
                 onClick={() =>
                   navigate({
-                    search: { q, category: c === "All" ? undefined : c, sort },
+                    search: { q, category: c === "All" ? "" : c, sort },
                   })
                 }
                 className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${

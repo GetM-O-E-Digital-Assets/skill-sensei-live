@@ -17,7 +17,7 @@ export function SearchBar({
 
   const submit = (value: string) => {
     const query = value.trim();
-    navigate({ to: "/search", search: { q: query || undefined } });
+    navigate({ to: "/search", search: { q: query, category: "", sort: "relevance" } });
   };
 
   const heights = { sm: "h-10", md: "h-12", lg: "h-14" }[size];
