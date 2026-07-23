@@ -8,8 +8,8 @@ import { CATEGORIES, searchLessons } from "@/lib/lessons";
 import { useMemo } from "react";
 
 const searchSchema = z.object({
-  q: fallback(z.string().optional(), undefined),
-  category: fallback(z.string().optional(), undefined),
+  q: fallback(z.string(), "").default(""),
+  category: fallback(z.string(), "").default(""),
   sort: fallback(z.string(), "relevance").default("relevance"),
 });
 
