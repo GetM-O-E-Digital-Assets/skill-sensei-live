@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLessonLessonIdRouteImport } from './routes/_authenticated/lesson.$lessonId'
+import { Route as AuthenticatedLessonGeneratedTopicRouteImport } from './routes/_authenticated/lesson.generated.$topic'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -58,6 +59,12 @@ const AuthenticatedLessonLessonIdRoute =
     path: '/lesson/$lessonId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLessonGeneratedTopicRoute =
+  AuthenticatedLessonGeneratedTopicRouteImport.update({
+    id: '/lesson/generated/$topic',
+    path: '/lesson/generated/$topic',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
+  '/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
+  '/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
+  '/_authenticated/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/chat'
     | '/lesson/$lessonId'
+    | '/lesson/generated/$topic'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/chat'
     | '/lesson/$lessonId'
+    | '/lesson/generated/$topic'
   id:
     | '__root__'
     | '/'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/api/chat'
     | '/_authenticated/lesson/$lessonId'
+    | '/_authenticated/lesson/generated/$topic'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,17 +199,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonLessonIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/lesson/generated/$topic': {
+      id: '/_authenticated/lesson/generated/$topic'
+      path: '/lesson/generated/$topic'
+      fullPath: '/lesson/generated/$topic'
+      preLoaderRoute: typeof AuthenticatedLessonGeneratedTopicRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLessonLessonIdRoute: typeof AuthenticatedLessonLessonIdRoute
+  AuthenticatedLessonGeneratedTopicRoute: typeof AuthenticatedLessonGeneratedTopicRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLessonLessonIdRoute: AuthenticatedLessonLessonIdRoute,
+  AuthenticatedLessonGeneratedTopicRoute:
+    AuthenticatedLessonGeneratedTopicRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

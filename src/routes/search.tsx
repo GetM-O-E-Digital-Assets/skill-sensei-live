@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { SiteHeader } from "@/components/site-header";
@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/search-bar";
 import { LessonCard } from "@/components/lesson-card";
 import { CATEGORIES, searchLessons } from "@/lib/lessons";
 import { useMemo } from "react";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
