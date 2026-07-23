@@ -27,7 +27,7 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q, category, sort } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const activeCategory = category ?? "All";
+  const activeCategory = category || "All";
 
   const results = useMemo(() => {
     const list = searchLessons(q ?? "", activeCategory);
