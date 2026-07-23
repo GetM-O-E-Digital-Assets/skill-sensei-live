@@ -44,7 +44,7 @@ function SearchPage() {
 
       <section className="border-b border-border/40 bg-surface/20 py-10">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <SearchBar size="lg" initial={q ?? ""} />
+          <SearchBar size="lg" initial={q} />
         </div>
       </section>
 
