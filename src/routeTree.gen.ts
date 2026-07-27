@@ -14,6 +14,7 @@ import { Route as LibraryRouteImport } from './routes/library'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiLessonImageRouteImport } from './routes/api/lesson-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLessonLessonIdRouteImport } from './routes/_authenticated/lesson.$lessonId'
@@ -41,6 +42,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLessonImageRoute = ApiLessonImageRouteImport.update({
+  id: '/api/lesson-image',
+  path: '/api/lesson-image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/lesson-image': typeof ApiLessonImageRoute
   '/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
   '/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/lesson-image': typeof ApiLessonImageRoute
   '/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
   '/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/lesson-image': typeof ApiLessonImageRoute
   '/_authenticated/lesson/$lessonId': typeof AuthenticatedLessonLessonIdRoute
   '/_authenticated/lesson/generated/$topic': typeof AuthenticatedLessonGeneratedTopicRoute
 }
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/dashboard'
     | '/api/chat'
+    | '/api/lesson-image'
     | '/lesson/$lessonId'
     | '/lesson/generated/$topic'
   fileRoutesByTo: FileRoutesByTo
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/dashboard'
     | '/api/chat'
+    | '/api/lesson-image'
     | '/lesson/$lessonId'
     | '/lesson/generated/$topic'
   id:
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/_authenticated/dashboard'
     | '/api/chat'
+    | '/api/lesson-image'
     | '/_authenticated/lesson/$lessonId'
     | '/_authenticated/lesson/generated/$topic'
   fileRoutesById: FileRoutesById
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   SearchRoute: typeof SearchRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiLessonImageRoute: typeof ApiLessonImageRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -176,6 +189,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/lesson-image': {
+      id: '/api/lesson-image'
+      path: '/api/lesson-image'
+      fullPath: '/api/lesson-image'
+      preLoaderRoute: typeof ApiLessonImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   SearchRoute: SearchRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiLessonImageRoute: ApiLessonImageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

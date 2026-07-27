@@ -1,27 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { generateLesson } from "@/lib/generate-lesson.functions";
 import { LessonViewer } from "@/components/lesson-viewer";
 import type { Lesson } from "@/lib/lessons";
-import heroImg from "@/assets/hero-workshop.jpg";
-import catKitchen from "@/assets/cat-kitchen.jpg";
-import catWood from "@/assets/cat-woodshop.jpg";
-import catElectronics from "@/assets/cat-electronics.jpg";
-import scene1 from "@/assets/lesson-oil-scene-1-hood.jpg";
+import { visualForLesson, generateLessonVisual, getCachedVisual } from "@/lib/lesson-visuals";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const COVER_BY_CAT: Record<string, string> = {
-  Automotive: scene1,
-  Mechanics: scene1,
-  Cooking: catKitchen,
-  Woodworking: catWood,
-  Construction: catWood,
-  Trades: catWood,
-  Technology: catElectronics,
-  Programming: catElectronics,
-  Electrical: catElectronics,
-};
 
 export const Route = createFileRoute("/_authenticated/lesson/generated/$topic")({
   head: ({ params }) => {
@@ -49,6 +34,19 @@ function GeneratedLessonPage() {
     gcTime: Infinity,
     retry: 0,
   });
+
+  // Topic-specific artwork, generated once per topic and cached for reuse.
+  const [visual, setVisual] = useState<string | undefined>(() => getCachedVisual(decoded));
+  useEffect(() => {
+    if (!data || visual) return;
+    let active = true;
+    generateLessonVisual(decoded, data.category).then((url) => {
+      if (active && url) setVisual(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [data, decoded, visual]);
 
   if (isLoading || (isFetching && !data)) {
     return (
@@ -85,7 +83,7 @@ function GeneratedLessonPage() {
     );
   }
 
-  const cover = COVER_BY_CAT[data.category] ?? heroImg;
+  const cover = visual ?? visualForLesson({ category: data.category, title: data.title, summary: data.summary });
   const lesson: Lesson = {
     id: `ai-${topic}`,
     title: data.title,
