@@ -7,6 +7,7 @@ import catKitchen from "@/assets/cat-kitchen.jpg";
 import catWood from "@/assets/cat-woodshop.jpg";
 import catElectronics from "@/assets/cat-electronics.jpg";
 import heroImg from "@/assets/hero-workshop.jpg";
+import { visualForLesson, isAutomotive } from "@/lib/lesson-visuals";
 
 import demoFiller from "@/assets/demo-filler-cap.mp4.asset.json";
 import demoDrain from "@/assets/demo-drain-plug.mp4.asset.json";
@@ -308,8 +309,7 @@ export type LessonSummary = {
 
 // ---------- Catalog ----------
 
-const covers = [scene1, scene2, scene3, scene4, scene5, catKitchen, catWood, catElectronics, heroImg];
-const pickCover = (i: number) => covers[i % covers.length];
+// Covers are matched to the lesson topic (see lesson-visuals.ts) — never cycled.
 
 type Seed = {
   id: string;
@@ -397,7 +397,7 @@ export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s, i) => ({
   category: s.category,
   level: s.level,
   totalMinutes: s.totalMinutes,
-  cover: pickCover(i),
+  cover: visualForLesson({ category: s.category, title: s.title, summary: s.summary, tags: s.tags }),
   summary: s.summary,
   available: true,
   tools: s.tools,
@@ -445,6 +445,16 @@ export function getLessonOrPreview(id: string): { lesson: Lesson; preview: boole
     totalMinutes: summary.totalMinutes,
     cover: summary.cover,
     summary: summary.summary,
+    steps: isAutomotive(summary.category, summary.title, summary.summary)
+      ? OIL_CHANGE_LESSON.steps
+      : OIL_CHANGE_LESSON.steps.map((step) => ({
+          ...step,
+          scene: summary.cover,
+          hotspots: step.hotspots.map((h) => ({
+            ...h,
+            demo: { kind: "scene-zoom" as const, scene: summary.cover, x: h.x, y: h.y, duration: 4 },
+          })),
+        })),
   };
   return { lesson: clone, preview: true, summary };
 }
