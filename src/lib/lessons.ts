@@ -3,10 +3,6 @@ import scene2 from "@/assets/lesson-oil-scene-2-drain.jpg";
 import scene3 from "@/assets/lesson-oil-scene-3-filter.jpg";
 import scene4 from "@/assets/lesson-oil-scene-4-refill.jpg";
 import scene5 from "@/assets/lesson-oil-scene-5-dipstick.jpg";
-import catKitchen from "@/assets/cat-kitchen.jpg";
-import catWood from "@/assets/cat-woodshop.jpg";
-import catElectronics from "@/assets/cat-electronics.jpg";
-import heroImg from "@/assets/hero-workshop.jpg";
 import { visualForLesson, isAutomotive } from "@/lib/lesson-visuals";
 
 import demoFiller from "@/assets/demo-filler-cap.mp4.asset.json";
