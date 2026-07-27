@@ -1,0 +1,59 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+/**
+ * Visual asset matching only: produces a simple illustration for a lesson
+ * topic when the catalog has no semantically matching artwork. Returns a
+ * single PNG data URL; the client caches it per topic.
+ */
+export const Route = createFileRoute("/api/lesson-image")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const { topic, category } = (await request.json()) as {
+          topic?: string;
+          category?: string;
+        };
+        if (!topic || topic.trim().length < 2) {
+          return new Response(JSON.stringify({ error: "Missing topic" }), { status: 400 });
+        }
+
+        const key = process.env.LOVABLE_API_KEY;
+        if (!key) return new Response(JSON.stringify({ error: "Missing key" }), { status: 500 });
+
+        const prompt = `A clean, photoreal cover image for a hands-on lesson about "${topic}"${
+          category ? ` in the ${category} category` : ""
+        }. Show the real tools, materials and environment for this specific skill. Cinematic lighting, shallow depth of field, no text, no logos, 16:10 framing. Do not include cars, engines or automotive tools unless the skill is automotive.`;
+
+        try {
+          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-3-pro-image",
+              messages: [{ role: "user", content: prompt }],
+              modalities: ["image", "text"],
+            }),
+          });
+
+          if (!upstream.ok) {
+            return new Response(JSON.stringify({ error: "Image generation failed" }), {
+              status: upstream.status,
+            });
+          }
+
+          const json = (await upstream.json()) as { data?: Array<{ b64_json?: string }> };
+          const b64 = json.data?.[0]?.b64_json;
+          if (!b64) {
+            return new Response(JSON.stringify({ error: "No image returned" }), { status: 502 });
+          }
+
+          return new Response(JSON.stringify({ image: `data:image/png;base64,${b64}` }), {
+            headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=31536000" },
+          });
+        } catch {
+          return new Response(JSON.stringify({ error: "Image generation failed" }), { status: 500 });
+        }
+      },
+    },
+  },
+});
