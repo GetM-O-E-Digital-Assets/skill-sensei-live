@@ -391,7 +391,7 @@ const SEEDS: Seed[] = [
   { id: "mech-bike-flat", title: "Fix a Flat Bike Tire", category: "Mechanics", level: "Beginner", totalMinutes: 20, summary: "Off with the wheel, patch or swap the tube, back on the road.", tools: ["Tire levers", "Pump"], materials: ["Patch kit", "Tube"], rating: 4.8, studentsCompleted: 7200, tags: ["bike"], daysAgo: 6 },
 ];
 
-export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s, i) => ({
+export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s) => ({
   id: s.id,
   title: s.title,
   category: s.category,
