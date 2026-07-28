@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Skill Sensei — Learn any real-world skill" },
       {
         property: "og:description",
-        content: "Immersive first-person lessons for every craft. Search, tap, master.",
+        content: "Search thousands of immersive first-person lessons. Cooking, cars, code, medicine, trades — learn by doing beside an AI instructor.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

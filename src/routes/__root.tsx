@@ -80,22 +80,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Skill Sensei — Learn real skills, one action at a time" },
+      { title: "Skill Sensei — Learn any real-world skill" },
       {
         name: "description",
         content:
-          "Skill Sensei is an immersive AI learning platform. Stand beside a master instructor in a real garage, kitchen, or workshop and learn any hands-on skill one deliberate action at a time.",
+          "Search thousands of immersive first-person lessons. Cooking, cars, code, medicine, trades — learn by doing beside an AI instructor.",
       },
       { name: "author", content: "Skill Sensei" },
       { name: "theme-color", content: "#1a1210" },
-      { property: "og:title", content: "Skill Sensei — Learn real skills, one action at a time" },
+      { property: "og:title", content: "Skill Sensei — Learn any real-world skill" },
       {
         property: "og:description",
         content:
-          "Immersive first-person AI lessons for real-world skills. Learn beside an expert, not on top of a video.",
+          "Search thousands of immersive first-person lessons. Cooking, cars, code, medicine, trades — learn by doing beside an AI instructor.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Skill Sensei — Learn any real-world skill" },
+      { name: "twitter:description", content: "Search thousands of immersive first-person lessons. Cooking, cars, code, medicine, trades — learn by doing beside an AI instructor." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d16c6e-69cf-4f9b-bc55-43e30bf55de0/id-preview-d57137ce--9fc22f9c-cf23-4839-9ba1-99b455c6561a.lovable.app-1785273562702.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d16c6e-69cf-4f9b-bc55-43e30bf55de0/id-preview-d57137ce--9fc22f9c-cf23-4839-9ba1-99b455c6561a.lovable.app-1785273562702.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
