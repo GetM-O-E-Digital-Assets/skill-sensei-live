@@ -9,9 +9,10 @@ export const Route = createFileRoute("/api/lesson-image")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { topic, category } = (await request.json()) as {
+        const { topic, category, scene } = (await request.json()) as {
           topic?: string;
           category?: string;
+          scene?: string;
         };
         if (!topic || topic.trim().length < 2) {
           return new Response(JSON.stringify({ error: "Missing topic" }), { status: 400 });
@@ -20,9 +21,10 @@ export const Route = createFileRoute("/api/lesson-image")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response(JSON.stringify({ error: "Missing key" }), { status: 500 });
 
-        const prompt = `A clean, photoreal cover image for a hands-on lesson about "${topic}"${
+        const prompt = `A photoreal first-person point-of-view image for a hands-on lesson about "${topic}"${
           category ? ` in the ${category} category` : ""
-        }. Show the real tools, materials and environment for this specific skill. Cinematic lighting, shallow depth of field, no text, no logos, 16:10 framing. Do not include cars, engines or automotive tools unless the skill is automotive.`;
+        }.${scene ? ` This specific scene shows: ${scene}.` : ""} Show the real tools, materials and environment for this specific skill only. Cinematic lighting, shallow depth of field, no text, no logos, 16:10 framing. Never include cars, engines, garages or automotive tools unless the skill itself is automotive.`;
+
 
         try {
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {

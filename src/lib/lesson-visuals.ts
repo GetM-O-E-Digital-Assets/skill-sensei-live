@@ -119,17 +119,17 @@ export function isAutomotive(category?: string, ...text: Array<string | undefine
 
 export const NEUTRAL_VISUAL = heroImg;
 
-// ---------- AI illustration fallback (cached) ----------
+// ---------- AI illustration (cached per topic + variant) ----------
 
 const memoryCache = new Map<string, string>();
 const CACHE_PREFIX = "ss-lesson-visual:";
 
-function cacheKey(topic: string) {
-  return CACHE_PREFIX + topic.trim().toLowerCase();
+function cacheKey(topic: string, variant?: string) {
+  return CACHE_PREFIX + topic.trim().toLowerCase() + (variant ? `::${variant.trim().toLowerCase()}` : "");
 }
 
-export function getCachedVisual(topic: string): string | undefined {
-  const key = cacheKey(topic);
+export function getCachedVisual(topic: string, variant?: string): string | undefined {
+  const key = cacheKey(topic, variant);
   const mem = memoryCache.get(key);
   if (mem) return mem;
   if (typeof window === "undefined") return undefined;
@@ -145,8 +145,8 @@ export function getCachedVisual(topic: string): string | undefined {
   return undefined;
 }
 
-function setCachedVisual(topic: string, dataUrl: string) {
-  const key = cacheKey(topic);
+function setCachedVisual(topic: string, dataUrl: string, variant?: string) {
+  const key = cacheKey(topic, variant);
   memoryCache.set(key, dataUrl);
   try {
     window.localStorage.setItem(key, dataUrl);
@@ -156,24 +156,29 @@ function setCachedVisual(topic: string, dataUrl: string) {
 }
 
 /**
- * Generate a simple illustration matching the lesson topic when no
- * suitable stock visual exists. Identical topics reuse the cached image.
+ * Generate artwork matching a lesson topic (and optionally one specific
+ * step/scene). Identical requests reuse the cached image.
  */
-export async function generateLessonVisual(topic: string, category?: string): Promise<string | undefined> {
-  const cached = getCachedVisual(topic);
+export async function generateLessonVisual(
+  topic: string,
+  category?: string,
+  variant?: string,
+): Promise<string | undefined> {
+  const cached = getCachedVisual(topic, variant);
   if (cached) return cached;
   try {
     const res = await fetch("/api/lesson-image", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, category }),
+      body: JSON.stringify({ topic, category, scene: variant }),
     });
     if (!res.ok) return undefined;
     const json = (await res.json()) as { image?: string };
     if (!json.image) return undefined;
-    setCachedVisual(topic, json.image);
+    setCachedVisual(topic, json.image, variant);
     return json.image;
   } catch {
     return undefined;
   }
 }
+
