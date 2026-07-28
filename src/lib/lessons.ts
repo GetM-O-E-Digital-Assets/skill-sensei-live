@@ -1,19 +1,5 @@
-import scene1 from "@/assets/lesson-oil-scene-1-hood.jpg";
-import scene2 from "@/assets/lesson-oil-scene-2-drain.jpg";
-import scene3 from "@/assets/lesson-oil-scene-3-filter.jpg";
-import scene4 from "@/assets/lesson-oil-scene-4-refill.jpg";
-import scene5 from "@/assets/lesson-oil-scene-5-dipstick.jpg";
-import { visualForLesson, isAutomotive } from "@/lib/lesson-visuals";
+import { visualForLesson } from "@/lib/lesson-visuals";
 
-import demoFiller from "@/assets/demo-filler-cap.mp4.asset.json";
-import demoDrain from "@/assets/demo-drain-plug.mp4.asset.json";
-import demoCatch from "@/assets/demo-catch-pan.mp4.asset.json";
-import demoFilter from "@/assets/demo-oil-filter.mp4.asset.json";
-import demoGasket from "@/assets/demo-gasket.mp4.asset.json";
-import demoFunnel from "@/assets/demo-funnel.mp4.asset.json";
-import demoPour from "@/assets/demo-pour.mp4.asset.json";
-import demoDipstick from "@/assets/demo-dipstick.mp4.asset.json";
-import demoTowel from "@/assets/demo-towel.mp4.asset.json";
 
 /**
  * Demonstration engine — pluggable so future versions can add
@@ -63,192 +49,8 @@ export type Lesson = {
   steps: LessonStep[];
 };
 
-export const OIL_CHANGE_LESSON: Lesson = {
-  id: "auto-oil-change",
-  title: "Change Your Engine Oil",
-  category: "Automotive",
-  instructor: "Marcus Reid, ASE Master Technician",
-  level: "Beginner",
-  totalMinutes: 22,
-  cover: scene1,
-  summary:
-    "Stand beside a master tech in a working garage and change your engine oil one action at a time.",
-  environment: "Professional automotive garage",
-  steps: [
-    {
-      id: "prep",
-      title: "Under the hood",
-      scene: scene1,
-      duration: "3 min",
-      intro: "Orient yourself. Tap any glowing point to watch it demonstrated.",
-      hotspots: [
-        {
-          id: "engine",
-          label: "Engine block",
-          x: 50,
-          y: 60,
-          action: "This is the V6 engine",
-          demo: { kind: "scene-zoom", scene: scene1, x: 50, y: 60, duration: 4 },
-          why: "The oil you're about to change lubricates every moving surface inside it.",
-          tips: ["3.0L V6 — 5.2 quarts total capacity", "Runs quiet when the oil is fresh"],
-        },
-        {
-          id: "filler",
-          label: "Oil filler cap",
-          x: 42,
-          y: 46,
-          action: "Twist the filler cap off",
-          demo: { kind: "video", src: demoFiller.url, duration: 5 },
-          why: "Opening the filler first lets air in so oil drains faster.",
-          tips: ["Quarter turn counter-clockwise", "Set it on a clean rag"],
-          mistake: "Resting the cap on the fender lip — it rolls into the engine bay.",
-        },
-        {
-          id: "battery",
-          label: "12V battery",
-          x: 18,
-          y: 48,
-          action: "Locate the battery terminals",
-          demo: { kind: "scene-zoom", scene: scene1, x: 18, y: 48, duration: 4 },
-          why: "Knowing where live electricity sits prevents a wrench short.",
-          warning: "Never let a metal tool bridge the red and black terminals.",
-        },
-      ],
-    },
-    {
-      id: "drain",
-      title: "Drain the old oil",
-      scene: scene2,
-      duration: "5 min",
-      intro: "You're under the car. We drain from the lowest point.",
-      hotspots: [
-        {
-          id: "plug",
-          label: "Drain plug",
-          x: 50,
-          y: 48,
-          action: "Break the drain plug loose",
-          demo: { kind: "video", src: demoDrain.url, duration: 5 },
-          why: "Finishing by hand keeps the plug from dropping into hot oil.",
-          tips: ["17mm socket", "Firm counter-clockwise pull, then hand-finish"],
-          warning: "Oil may be hot — 40°C is plenty to scald.",
-          mistake: "Wrenching all the way out — the plug drops into the pan.",
-        },
-        {
-          id: "pan",
-          label: "Catch pan",
-          x: 50,
-          y: 88,
-          action: "Slide the catch pan into position",
-          demo: { kind: "video", src: demoCatch.url, duration: 5 },
-          why: "Warm oil arcs forward as it drains — placement matters.",
-          tips: ["Offset slightly toward you", "Center under the plug"],
-        },
-        {
-          id: "worklight",
-          label: "Work light",
-          x: 10,
-          y: 78,
-          action: "Aim the work light",
-          demo: { kind: "scene-zoom", scene: scene2, x: 10, y: 78, duration: 4 },
-          why: "Grazing light reveals leaks that overhead light hides.",
-          tips: ["Aim it across the pan, not straight down"],
-        },
-      ],
-    },
-    {
-      id: "filter",
-      title: "Swap the oil filter",
-      scene: scene3,
-      duration: "6 min",
-      intro: "The old filter is holding a cup of oil. Remove it carefully.",
-      hotspots: [
-        {
-          id: "filter",
-          label: "Oil filter",
-          x: 52,
-          y: 44,
-          action: "Break the filter loose",
-          demo: { kind: "video", src: demoFilter.url, duration: 5 },
-          why: "Filter housings are thin steel — overtightening crushes them.",
-          tips: ["One steady counter-clockwise rotation", "Finish by hand"],
-          mistake: "Cranking the wrench past break-loose and denting the can.",
-        },
-        {
-          id: "gasket",
-          label: "New filter gasket",
-          x: 50,
-          y: 68,
-          action: "Prime the new gasket with oil",
-          demo: { kind: "video", src: demoGasket.url, duration: 5 },
-          why: "A dry gasket tears on first startup and dumps your fresh oil.",
-          tips: ["Fingertip of fresh oil", "One full circle around the rubber"],
-          mistake: "Forgetting the prime — the #1 cause of first-drive leaks.",
-        },
-      ],
-    },
-    {
-      id: "refill",
-      title: "Refill with fresh oil",
-      scene: scene4,
-      duration: "4 min",
-      intro: "Owner's manual says 5.2 quarts.",
-      hotspots: [
-        {
-          id: "funnel",
-          label: "Funnel",
-          x: 78,
-          y: 62,
-          action: "Seat the funnel",
-          demo: { kind: "video", src: demoFunnel.url, duration: 5 },
-          why: "Oil on the valve cover cooks and smells for weeks.",
-          tips: ["Push firmly, wiggle to seat the ring"],
-        },
-        {
-          id: "bottle",
-          label: "Fresh oil bottle",
-          x: 68,
-          y: 44,
-          action: "Pour steadily",
-          demo: { kind: "video", src: demoPour.url, duration: 5 },
-          why: "Glug-glug pouring pressurizes the crankcase and backs oil up.",
-          tips: ["45° angle", "Pause between quarts so air can escape"],
-          mistake: "Pouring straight up — creates the glug and overflows.",
-        },
-      ],
-    },
-    {
-      id: "verify",
-      title: "Verify the level",
-      scene: scene5,
-      duration: "4 min",
-      intro: "Pull, wipe, seat, pull again, read.",
-      hotspots: [
-        {
-          id: "dipstick",
-          label: "Dipstick",
-          x: 66,
-          y: 52,
-          action: "Pull the dipstick",
-          demo: { kind: "video", src: demoDipstick.url, duration: 5 },
-          why: "Oil should sit between the two crosshatch marks.",
-          tips: ["Amber and clear = done", "Aim for the upper mark"],
-          mistake: "Reading the first pull — always wipe and re-seat first.",
-        },
-        {
-          id: "towel",
-          label: "Clean towel",
-          x: 30,
-          y: 66,
-          action: "Wipe the dipstick",
-          demo: { kind: "video", src: demoTowel.url, duration: 5 },
-          why: "Cotton fibers left on the stick end up circulating inside.",
-          tips: ["Lint-free shop towel", "One direction, one stroke"],
-        },
-      ],
-    },
-  ],
-};
+
+
 
 /** Full category taxonomy — designed for millions of future lessons. */
 export const CATEGORIES = [
@@ -406,54 +208,13 @@ export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s) => ({
   source: s.source ?? "official",
 }));
 
-// Give the oil-change lesson its real cover after auto-cycling
-const oilIdx = LESSON_LIBRARY.findIndex((l) => l.id === OIL_CHANGE_LESSON.id);
-if (oilIdx >= 0) LESSON_LIBRARY[oilIdx].cover = OIL_CHANGE_LESSON.cover;
-
 // ---------- Query helpers ----------
 
-export function getLesson(id: string): Lesson | undefined {
-  if (id === OIL_CHANGE_LESSON.id) return OIL_CHANGE_LESSON;
-  return undefined;
+/** Catalog metadata for a lesson id. Lesson content itself is AI-generated. */
+export function getLessonSummary(id: string): LessonSummary | undefined {
+  return LESSON_LIBRARY.find((l) => l.id === id);
 }
 
-/**
- * getLessonOrPreview — every catalog entry is playable through the
- * shared engine. Until a lesson has its own authored content, it opens
- * the reference lesson (oil change) so the interactive engine can be
- * experienced end-to-end. Real content plugs in later without any UI
- * change.
- */
-export function getLessonOrPreview(id: string): { lesson: Lesson; preview: boolean; summary?: LessonSummary } {
-  const real = getLesson(id);
-  if (real) {
-    const summary = LESSON_LIBRARY.find((l) => l.id === id);
-    return { lesson: real, preview: false, summary };
-  }
-  const summary = LESSON_LIBRARY.find((l) => l.id === id);
-  if (!summary) throw new Error("Lesson not found");
-  const clone: Lesson = {
-    ...OIL_CHANGE_LESSON,
-    id: summary.id,
-    title: summary.title,
-    category: summary.category,
-    level: summary.level,
-    totalMinutes: summary.totalMinutes,
-    cover: summary.cover,
-    summary: summary.summary,
-    steps: isAutomotive(summary.category, summary.title, summary.summary)
-      ? OIL_CHANGE_LESSON.steps
-      : OIL_CHANGE_LESSON.steps.map((step) => ({
-          ...step,
-          scene: summary.cover,
-          hotspots: step.hotspots.map((h) => ({
-            ...h,
-            demo: { kind: "scene-zoom" as const, scene: summary.cover, x: h.x, y: h.y, duration: 4 },
-          })),
-        })),
-  };
-  return { lesson: clone, preview: true, summary };
-}
 
 export function searchLessons(query: string, category?: string): LessonSummary[] {
   const q = query.trim().toLowerCase();

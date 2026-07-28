@@ -1,20 +1,20 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { getLessonOrPreview } from "@/lib/lessons";
-import { LessonViewer } from "@/components/lesson-viewer";
+import { getLessonSummary } from "@/lib/lessons";
+import { AiLesson } from "@/components/ai-lesson";
 
 export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
   loader: ({ params }) => {
-    try {
-      return getLessonOrPreview(params.lessonId);
-    } catch {
-      throw notFound();
-    }
+    const summary = getLessonSummary(params.lessonId);
+    if (!summary) throw notFound();
+    return { summary };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.lesson.title} — Skill Sensei` },
-          { name: "description", content: loaderData.lesson.summary },
+          { title: `${loaderData.summary.title} — Skill Sensei` },
+          { name: "description", content: loaderData.summary.summary },
+          { property: "og:title", content: `${loaderData.summary.title} — Skill Sensei` },
+          { property: "og:description", content: loaderData.summary.summary },
         ]
       : [{ title: "Lesson — Skill Sensei" }],
   }),
@@ -39,18 +39,12 @@ export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
 });
 
 function LessonPage() {
-  const { lesson, preview } = Route.useLoaderData();
+  const { summary } = Route.useLoaderData();
   return (
-    <div>
-      {preview && (
-        <div className="border-b border-ember/30 bg-ember/10 py-2 text-center text-xs">
-          <span className="font-mono uppercase tracking-widest text-ember">Preview</span>
-          <span className="ml-2 text-muted-foreground">
-            Authored lesson coming soon — try the engine using our reference lesson.
-          </span>
-        </div>
-      )}
-      <LessonViewer lesson={lesson} />
-    </div>
+    <AiLesson
+      key={summary.id}
+      lessonId={summary.id}
+      topic={`${summary.title} (${summary.category}) — ${summary.summary}`}
+    />
   );
 }

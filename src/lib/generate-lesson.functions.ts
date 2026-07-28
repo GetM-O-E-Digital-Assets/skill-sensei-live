@@ -117,8 +117,17 @@ export const generateLesson = createServerFn({ method: "POST" })
       throw new Error("AI returned malformed JSON");
     }
 
-    // Light normalization — clamp & fallback so a slightly off response still plays.
-    if (!ALLOWED_CATS.includes(parsed.category)) parsed.category = "DIY";
+    // Repair pass — if the model omitted fields, regenerate ONLY those fields.
+    const missing = missingFields(parsed);
+    if (missing.length) {
+      const patch = await requestFields(key, data.topic, missing, parsed);
+      parsed = { ...parsed, ...patch };
+    }
+
+    // Clamp numeric/enum values so the engine always receives valid data.
+    if (!ALLOWED_CATS.includes(parsed.category)) {
+      parsed.category = (await inferCategory(key, data.topic)) ?? "DIY";
+    }
     if (!["Beginner", "Intermediate", "Advanced"].includes(parsed.level)) parsed.level = "Beginner";
     parsed.totalMinutes = Math.max(5, Math.min(180, Number(parsed.totalMinutes) || 30));
     parsed.steps = (parsed.steps ?? []).slice(0, 6).map((s, i) => ({
@@ -131,5 +140,77 @@ export const generateLesson = createServerFn({ method: "POST" })
         y: Math.max(20, Math.min(85, Number(h.y) || 55)),
       })),
     }));
+
+    if (!parsed.steps.length) throw new Error("AI returned no lesson steps — please try again.");
     return parsed;
   });
+
+// ---------- field-level repair helpers ----------
+
+function missingFields(l: Partial<GeneratedLessonRaw>): string[] {
+  const out: string[] = [];
+  if (!l.title?.trim()) out.push("title");
+  if (!l.summary?.trim()) out.push("summary");
+  if (!l.environment?.trim()) out.push("environment");
+  if (!l.instructor?.trim()) out.push("instructor");
+  if (!Array.isArray(l.objectives) || !l.objectives.length) out.push("objectives");
+  if (!Array.isArray(l.tools)) out.push("tools");
+  if (!Array.isArray(l.materials)) out.push("materials");
+  if (!Array.isArray(l.safety) || !l.safety.length) out.push("safety");
+  if (!Array.isArray(l.steps) || !l.steps.length) out.push("steps");
+  return out;
+}
+
+async function chatJson(key: string, system: string, user: string): Promise<Record<string, unknown>> {
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "openai/gpt-5.5",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  });
+  if (!r.ok) return {};
+  const j = (await r.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  try {
+    return JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+/** Regenerate only the fields the model left out, in the lesson's own context. */
+async function requestFields(
+  key: string,
+  topic: string,
+  fields: string[],
+  ctx: Partial<GeneratedLessonRaw>,
+): Promise<Partial<GeneratedLessonRaw>> {
+  const patch = await chatJson(
+    key,
+    SYSTEM,
+    `Skill topic: ${topic}\n\nAn earlier lesson draft is missing these fields: ${fields.join(", ")}.\nExisting draft (for context): ${JSON.stringify(
+      { title: ctx.title, category: ctx.category, summary: ctx.summary },
+    )}\n\nReturn STRICT JSON containing ONLY these keys: ${fields.join(", ")}. Use the same schema as before.`,
+  );
+  const out: Partial<GeneratedLessonRaw> = {};
+  for (const f of fields) {
+    if (patch[f] !== undefined) (out as Record<string, unknown>)[f] = patch[f];
+  }
+  return out;
+}
+
+async function inferCategory(key: string, topic: string): Promise<GeneratedLessonRaw["category"] | undefined> {
+  const patch = await chatJson(
+    key,
+    "You classify skills into exactly one category. Return JSON: {\"category\": \"<one of the list>\"}",
+    `Categories: ${ALLOWED_CATS.join(", ")}\nSkill topic: ${topic}`,
+  );
+  const c = patch.category as GeneratedLessonRaw["category"];
+  return ALLOWED_CATS.includes(c) ? c : undefined;
+}
+
