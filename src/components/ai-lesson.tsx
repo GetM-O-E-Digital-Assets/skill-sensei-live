@@ -126,7 +126,17 @@ export function AiLesson({ topic, lessonId }: { topic: string; lessonId: string 
           tips: h.tips,
           warning: h.warning,
           mistake: h.mistake,
-          demo: { kind: "scene-zoom" as const, scene, x: h.x, y: h.y, duration: 4 },
+          demo: {
+            kind: "action-demo" as const,
+            scene,
+            x: h.x,
+            y: h.y,
+            duration: 4.5,
+            topic,
+            category: data.category,
+            label: h.label,
+            action: h.action,
+          },
         })),
       };
     }),
