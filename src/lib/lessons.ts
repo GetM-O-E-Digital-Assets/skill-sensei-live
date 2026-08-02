@@ -9,6 +9,18 @@ import { visualForLesson } from "@/lib/lesson-visuals";
 export type Demonstration =
   | { kind: "video"; src: string; duration: number; sound?: string; poster?: string }
   | { kind: "scene-zoom"; scene: string; x: number; y: number; duration: number }
+  | {
+      /** Continuous hands + tool demonstration of one specific step action. */
+      kind: "action-demo";
+      scene: string;
+      x: number;
+      y: number;
+      duration: number;
+      topic: string;
+      category?: string;
+      label: string;
+      action: string;
+    }
   | { kind: "ai-generated"; prompt: string; duration: number }
   | { kind: "scene-3d"; sceneId: string };
 

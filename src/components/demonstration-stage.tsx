@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import type { Demonstration } from "@/lib/lessons";
+import { ActionDemo } from "./action-demo";
 
 export type DemoStageHandle = {
   replay: () => void;
@@ -17,9 +18,11 @@ export const DemonstrationStage = forwardRef<
 >(function DemonstrationStage({ demo, onEnded }, ref) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [slow, setSlow] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
 
   useImperativeHandle(ref, () => ({
     replay: () => {
+      setReplayKey((k) => k + 1);
       const v = videoRef.current;
       if (v) {
         v.currentTime = 0;
@@ -40,6 +43,25 @@ export const DemonstrationStage = forwardRef<
       void v.play().catch(() => {});
     }
   }, [demo, slow]);
+
+  if (demo.kind === "action-demo") {
+    return (
+      <ActionDemo
+        scene={demo.scene}
+        x={demo.x}
+        y={demo.y}
+        duration={demo.duration}
+        topic={demo.topic}
+        category={demo.category}
+        label={demo.label}
+        action={demo.action}
+        slow={slow}
+        replayKey={replayKey}
+        onEnded={onEnded}
+      />
+    );
+  }
+
 
   if (demo.kind === "video") {
     return (
