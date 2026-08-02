@@ -263,15 +263,15 @@
 .demo-target-ring {
   width: 5.5rem;
   height: 5.5rem;
-  border: 2px solid hsl(var(--ember) / 0.85);
-  box-shadow: 0 0 32px hsl(var(--ember) / 0.45);
+  border: 2px solid var(--ember);
+  box-shadow: 0 0 32px var(--ember-glow);
   animation: ss-demo-react var(--demo-speed, 4s) ease-out forwards;
 }
 
 .demo-target-core {
   width: 1.1rem;
   height: 1.1rem;
-  background: hsl(var(--ember) / 0.9);
+  background: var(--ember);
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 18px hsl(var(--ember) / 0.8);
+  box-shadow: 0 0 18px var(--ember-glow);
 }
