@@ -248,12 +248,18 @@ export function searchLessons(query: string, category?: string): LessonSummary[]
 }
 
 export function popularLessons(limit = 8): LessonSummary[] {
-  return [...LESSON_LIBRARY].sort((a, b) => b.popularityScore - a.popularityScore).slice(0, limit);
+  return [...LESSON_LIBRARY]
+    .sort((a, b) => b.popularityScore - a.popularityScore || a.id.localeCompare(b.id))
+    .slice(0, limit);
 }
 
 export function recentlyAddedLessons(limit = 8): LessonSummary[] {
   return [...LESSON_LIBRARY]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+        a.id.localeCompare(b.id),
+    )
     .slice(0, limit);
 }
 
