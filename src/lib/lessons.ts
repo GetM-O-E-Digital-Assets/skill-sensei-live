@@ -215,7 +215,7 @@ export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s) => ({
   rating: s.rating ?? 4.5,
   studentsCompleted: s.studentsCompleted ?? 500,
   tags: s.tags ?? [],
-  createdAt: new Date(Date.now() - (s.daysAgo ?? 30) * 86400_000).toISOString(),
+  createdAt: new Date(CATALOG_EPOCH - (s.daysAgo ?? 30) * 86400_000).toISOString(),
   popularityScore: s.popularityScore ?? Math.round((s.rating ?? 4.5) * 10 + Math.log10((s.studentsCompleted ?? 500) + 1) * 5),
   source: s.source ?? "official",
 }));
