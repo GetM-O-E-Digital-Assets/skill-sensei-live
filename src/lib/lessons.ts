@@ -201,6 +201,9 @@ const SEEDS: Seed[] = [
   { id: "mech-bike-flat", title: "Fix a Flat Bike Tire", category: "Mechanics", level: "Beginner", totalMinutes: 20, summary: "Off with the wheel, patch or swap the tube, back on the road.", tools: ["Tire levers", "Pump"], materials: ["Patch kit", "Tube"], rating: 4.8, studentsCompleted: 7200, tags: ["bike"], daysAgo: 6 },
 ];
 
+// Fixed epoch so server and client render identical catalog dates/order (no hydration mismatch).
+const CATALOG_EPOCH = Date.UTC(2026, 0, 1);
+
 export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s) => ({
   id: s.id,
   title: s.title,
@@ -215,7 +218,7 @@ export const LESSON_LIBRARY: LessonSummary[] = SEEDS.map((s) => ({
   rating: s.rating ?? 4.5,
   studentsCompleted: s.studentsCompleted ?? 500,
   tags: s.tags ?? [],
-  createdAt: new Date(Date.now() - (s.daysAgo ?? 30) * 86400_000).toISOString(),
+  createdAt: new Date(CATALOG_EPOCH - (s.daysAgo ?? 30) * 86400_000).toISOString(),
   popularityScore: s.popularityScore ?? Math.round((s.rating ?? 4.5) * 10 + Math.log10((s.studentsCompleted ?? 500) + 1) * 5),
   source: s.source ?? "official",
 }));
@@ -245,12 +248,18 @@ export function searchLessons(query: string, category?: string): LessonSummary[]
 }
 
 export function popularLessons(limit = 8): LessonSummary[] {
-  return [...LESSON_LIBRARY].sort((a, b) => b.popularityScore - a.popularityScore).slice(0, limit);
+  return [...LESSON_LIBRARY]
+    .sort((a, b) => b.popularityScore - a.popularityScore || a.id.localeCompare(b.id))
+    .slice(0, limit);
 }
 
 export function recentlyAddedLessons(limit = 8): LessonSummary[] {
   return [...LESSON_LIBRARY]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+        a.id.localeCompare(b.id),
+    )
     .slice(0, limit);
 }
 
