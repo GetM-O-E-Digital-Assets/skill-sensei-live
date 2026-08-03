@@ -16,7 +16,11 @@ import { Button } from "@/components/ui/button";
 export function AiLesson({ topic, lessonId }: { topic: string; lessonId: string }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["gen-lesson", topic.toLowerCase()],
-    queryFn: () => generateLesson({ data: { topic } }),
+    queryFn: async () => {
+      const result = await generateLesson({ data: { topic } });
+      if (!result.ok) throw new Error(result.message);
+      return result.lesson;
+    },
     staleTime: Infinity,
     gcTime: Infinity,
     retry: 0,

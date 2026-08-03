@@ -40,6 +40,14 @@ export type GeneratedLessonRaw = {
   }>;
 };
 
+export type GenerateLessonResult =
+  | { ok: true; lesson: GeneratedLessonRaw }
+  | {
+      ok: false;
+      code: "credits_exhausted" | "rate_limited" | "generation_failed";
+      message: string;
+    };
+
 const SYSTEM = `You are a master curriculum designer for Skill Sensei, a first-person immersive skill learning platform.
 Given a real-world skill topic, produce a complete interactive lesson as STRICT JSON — no prose, no code fences, no markdown.
 
@@ -82,7 +90,7 @@ Return ONLY the JSON object.`;
 
 export const generateLesson = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
-  .handler(async ({ data }): Promise<GeneratedLessonRaw> => {
+  .handler(async ({ data }): Promise<GenerateLessonResult> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
@@ -99,11 +107,28 @@ export const generateLesson = createServerFn({ method: "POST" })
       }),
     });
 
-    if (r.status === 429) throw new Error("Rate limit hit — try again in a moment.");
-    if (r.status === 402) throw new Error("AI credits exhausted. Add credits to keep generating lessons.");
+    if (r.status === 429) {
+      return {
+        ok: false,
+        code: "rate_limited",
+        message: "Lesson generation is busy right now. Please try again in a moment.",
+      };
+    }
+    if (r.status === 402) {
+      return {
+        ok: false,
+        code: "credits_exhausted",
+        message: "AI lesson generation is temporarily unavailable because this workspace has no AI credits remaining.",
+      };
+    }
     if (!r.ok) {
       const t = await r.text().catch(() => "");
-      throw new Error(`Generation failed (${r.status}): ${t.slice(0, 200)}`);
+      console.error("Lesson generation failed", r.status, t.slice(0, 200));
+      return {
+        ok: false,
+        code: "generation_failed",
+        message: "The lesson could not be generated. Please try again in a moment.",
+      };
     }
 
     const j = (await r.json()) as { choices?: Array<{ message?: { content?: string } }> };
@@ -142,7 +167,7 @@ export const generateLesson = createServerFn({ method: "POST" })
     }));
 
     if (!parsed.steps.length) throw new Error("AI returned no lesson steps — please try again.");
-    return parsed;
+    return { ok: true, lesson: parsed };
   });
 
 // ---------- field-level repair helpers ----------
