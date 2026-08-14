@@ -23,7 +23,14 @@ import {
 import { toast } from "sonner";
 import { saveProgress, toggleBookmark } from "@/lib/progress.functions";
 
-export function LessonViewer({ lesson }: { lesson: Lesson }) {
+export function LessonViewer({
+  lesson,
+  onStepEnter,
+}: {
+  lesson: Lesson;
+  /** Fired when the learner arrives at a step — used for on-demand assets. */
+  onStepEnter?: (stepId: string, index: number) => void;
+}) {
   const [stepIdx, setStepIdx] = useState(0);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -51,6 +58,12 @@ export function LessonViewer({ lesson }: { lesson: Lesson }) {
     }),
     [lesson.title, lesson.steps.length, step, stepIdx, activeHotspot, completed],
   );
+
+  // Tell the host which step is on screen so its artwork can load lazily
+  useEffect(() => {
+    onStepEnter?.(step.id, stepIdx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id, stepIdx]);
 
   // Reset demo state whenever a new hotspot is opened
   useEffect(() => {

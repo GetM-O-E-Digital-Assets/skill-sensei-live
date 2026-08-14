@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_cache: {
+        Row: {
+          created_at: string
+          id: string
+          lesson: Json
+          topic_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson: Json
+          topic_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson?: Json
+          topic_key?: string
+        }
+        Relationships: []
+      }
+      lesson_image_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          id: string
+          image: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          id?: string
+          image: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          id?: string
+          image?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean

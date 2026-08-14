@@ -21,6 +21,20 @@ export const Route = createFileRoute("/api/lesson-image")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response(JSON.stringify({ error: "Missing key" }), { status: 500 });
 
+        const cacheKey = `${topic.trim().toLowerCase()}::${(category ?? "").toLowerCase()}::${(scene ?? "").trim().toLowerCase()}`;
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        const cached = await supabaseAdmin
+          .from("lesson_image_cache")
+          .select("image")
+          .eq("cache_key", cacheKey)
+          .maybeSingle();
+        if (cached.data?.image) {
+          return new Response(JSON.stringify({ image: cached.data.image }), {
+            headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=31536000" },
+          });
+        }
+
         const prompt = `A photoreal first-person point-of-view image for a hands-on lesson about "${topic}"${
           category ? ` in the ${category} category` : ""
         }.${scene ? ` This specific scene shows: ${scene}.` : ""} Show the real tools, materials and environment for this specific skill only. Cinematic lighting, shallow depth of field, no text, no logos, 16:10 framing. Never include cars, engines, garages or automotive tools unless the skill itself is automotive.`;
@@ -31,7 +45,7 @@ export const Route = createFileRoute("/api/lesson-image")({
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-3-pro-image",
+              model: "google/gemini-3.1-flash-image",
               messages: [{ role: "user", content: prompt }],
               modalities: ["image", "text"],
             }),
@@ -49,7 +63,12 @@ export const Route = createFileRoute("/api/lesson-image")({
             return new Response(JSON.stringify({ error: "No image returned" }), { status: 502 });
           }
 
-          return new Response(JSON.stringify({ image: `data:image/png;base64,${b64}` }), {
+          const image = `data:image/png;base64,${b64}`;
+          await supabaseAdmin
+            .from("lesson_image_cache")
+            .upsert({ cache_key: cacheKey, image }, { onConflict: "cache_key" });
+
+          return new Response(JSON.stringify({ image }), {
             headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=31536000" },
           });
         } catch {
