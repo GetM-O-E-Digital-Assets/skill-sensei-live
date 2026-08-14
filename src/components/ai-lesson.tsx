@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { generateLesson } from "@/lib/generate-lesson.functions";
@@ -29,34 +29,40 @@ export function AiLesson({ topic, lessonId }: { topic: string; lessonId: string 
   // Topic-specific artwork: one hero plus one image per step, cached per topic.
   const [hero, setHero] = useState<string | undefined>(() => getCachedVisual(topic));
   const [stepArt, setStepArt] = useState<Record<string, string>>({});
+  const requested = useRef<Set<string>>(new Set());
 
+  // Hero art only — step art is generated lazily when the learner arrives.
   useEffect(() => {
-    if (!data) return;
+    if (!data || hero) return;
     let active = true;
-
     (async () => {
-      if (!hero) {
-        const url = await generateLessonVisual(topic, data.category);
-        if (!active) return;
-        if (url) setHero(url);
-      }
-      for (const s of data.steps) {
-        const cached = getCachedVisual(topic, s.id);
-        if (cached) {
-          setStepArt((p) => (p[s.id] ? p : { ...p, [s.id]: cached }));
-          continue;
-        }
-        const url = await generateLessonVisual(topic, data.category, `${s.title} — ${s.intro}`);
-        if (!active) return;
-        if (url) setStepArt((p) => ({ ...p, [s.id]: url }));
-      }
+      const url = await generateLessonVisual(topic, data.category);
+      if (active && url) setHero(url);
     })();
-
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, topic]);
+
+  /** Generate (or reuse) artwork for one step, on demand. */
+  const ensureStepArt = useCallback(
+    async (stepId: string) => {
+      if (!data || stepArt[stepId] || requested.current.has(stepId)) return;
+      const step = data.steps.find((s) => s.id === stepId);
+      if (!step) return;
+      const variant = `${step.title} — ${step.intro}`;
+      const cached = getCachedVisual(topic, variant);
+      if (cached) {
+        setStepArt((p) => ({ ...p, [stepId]: cached }));
+        return;
+      }
+      requested.current.add(stepId);
+      const url = await generateLessonVisual(topic, data.category, variant);
+      if (url) setStepArt((p) => ({ ...p, [stepId]: url }));
+    },
+    [data, stepArt, topic],
+  );
 
   if (isLoading || (isFetching && !data)) {
     return (
