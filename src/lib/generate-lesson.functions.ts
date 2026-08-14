@@ -3,6 +3,9 @@ import { z } from "zod";
 
 const Input = z.object({ topic: z.string().min(2).max(200) });
 
+/** Cost-efficient text model for lesson generation. */
+const MODEL = "google/gemini-3.5-flash";
+
 const ALLOWED_CATS = [
   "Automotive","Cooking","DIY","Home Repair","Construction","Woodworking","Electrical",
   "Plumbing","Mechanics","Technology","Programming","Business","Fitness","Medical",
@@ -94,11 +97,24 @@ export const generateLesson = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
+    const topicKey = data.topic.trim().toLowerCase();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Cached lesson for this exact topic — costs no AI credits.
+    const cachedRow = await supabaseAdmin
+      .from("lesson_cache")
+      .select("lesson")
+      .eq("topic_key", topicKey)
+      .maybeSingle();
+    if (cachedRow.data?.lesson) {
+      return { ok: true, lesson: cachedRow.data.lesson as unknown as GeneratedLessonRaw };
+    }
+
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "openai/gpt-5.5",
+        model: MODEL,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM },
@@ -167,6 +183,12 @@ export const generateLesson = createServerFn({ method: "POST" })
     }));
 
     if (!parsed.steps.length) throw new Error("AI returned no lesson steps — please try again.");
+
+    // Persist so this topic never costs credits again.
+    await supabaseAdmin
+      .from("lesson_cache")
+      .upsert({ topic_key: topicKey, lesson: parsed as unknown as Record<string, unknown> }, { onConflict: "topic_key" });
+
     return { ok: true, lesson: parsed };
   });
 
