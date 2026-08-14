@@ -59,6 +59,12 @@ export function LessonViewer({
     [lesson.title, lesson.steps.length, step, stepIdx, activeHotspot, completed],
   );
 
+  // Tell the host which step is on screen so its artwork can load lazily
+  useEffect(() => {
+    onStepEnter?.(step.id, stepIdx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id, stepIdx]);
+
   // Reset demo state whenever a new hotspot is opened
   useEffect(() => {
     setDemoEnded(false);
