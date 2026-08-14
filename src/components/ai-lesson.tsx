@@ -160,7 +160,7 @@ export function AiLesson({ topic, lessonId }: { topic: string; lessonId: string 
           Designed live by Sensei · Objectives: {data.objectives.slice(0, 3).join(" · ")}
         </span>
       </div>
-      <LessonViewer lesson={lesson} />
+      <LessonViewer lesson={lesson} onStepEnter={(stepId) => void ensureStepArt(stepId)} />
     </div>
   );
 }
