@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/lesson-image")({
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-3-pro-image",
+              model: "google/gemini-3.1-flash-image",
               messages: [{ role: "user", content: prompt }],
               modalities: ["image", "text"],
             }),
@@ -63,7 +63,12 @@ export const Route = createFileRoute("/api/lesson-image")({
             return new Response(JSON.stringify({ error: "No image returned" }), { status: 502 });
           }
 
-          return new Response(JSON.stringify({ image: `data:image/png;base64,${b64}` }), {
+          const image = `data:image/png;base64,${b64}`;
+          await supabaseAdmin
+            .from("lesson_image_cache")
+            .upsert({ cache_key: cacheKey, image }, { onConflict: "cache_key" });
+
+          return new Response(JSON.stringify({ image }), {
             headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=31536000" },
           });
         } catch {
