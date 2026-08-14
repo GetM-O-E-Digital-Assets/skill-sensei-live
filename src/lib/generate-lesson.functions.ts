@@ -187,7 +187,7 @@ export const generateLesson = createServerFn({ method: "POST" })
     // Persist so this topic never costs credits again.
     await supabaseAdmin
       .from("lesson_cache")
-      .upsert({ topic_key: topicKey, lesson: parsed as unknown as Record<string, unknown> }, { onConflict: "topic_key" });
+      .upsert({ topic_key: topicKey, lesson: parsed as unknown as never }, { onConflict: "topic_key" });
 
     return { ok: true, lesson: parsed };
   });
@@ -213,7 +213,7 @@ async function chatJson(key: string, system: string, user: string): Promise<Reco
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "openai/gpt-5.5",
+      model: MODEL,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
