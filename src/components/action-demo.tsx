@@ -78,12 +78,35 @@ export function ActionDemo({
       <img src={scene} alt="" className="demo-camera h-full w-full object-cover" />
 
       {/* Continuous hand + tool movement for this action */}
-      {frame && (
+      {frame ? (
         <img
           src={frame}
           alt={`Demonstration: ${action}`}
           className="demo-hands absolute inset-0 h-full w-full object-cover"
         />
+      ) : (
+        /* No photoreal frame available — still demonstrate the movement:
+           a hand gripping a tool sweeps in and performs the stroke on the
+           exact working area, driven by the same continuous timing. */
+        <div
+          className="demo-mime pointer-events-none absolute"
+          style={{ left: `${x}%`, top: `${y}%` }}
+          aria-label={`Demonstration: ${action}`}
+        >
+          <svg viewBox="0 0 200 200" className="h-56 w-56 drop-shadow-[0_18px_28px_rgba(0,0,0,0.6)]">
+            {/* tool */}
+            <g className="demo-mime-tool">
+              <rect x="92" y="18" width="14" height="62" rx="6" fill="var(--ember)" opacity="0.95" />
+              <rect x="86" y="72" width="26" height="20" rx="5" fill="#d8dde3" />
+            </g>
+            {/* hand */}
+            <g fill="#e8c39a" stroke="rgba(0,0,0,0.35)" strokeWidth="2">
+              <rect x="74" y="88" width="52" height="44" rx="20" />
+              <rect x="66" y="98" width="24" height="16" rx="8" />
+              <rect x="82" y="126" width="42" height="46" rx="18" />
+            </g>
+          </svg>
+        </div>
       )}
 
       {/* Highlight of the precise working area */}
@@ -97,13 +120,14 @@ export function ActionDemo({
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
 
-      {!frame && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-24 text-center">
-          <span className="rounded-full border border-ember/40 bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-ember backdrop-blur">
-            Rendering the movement…
-          </span>
-        </div>
-      )}
+      {/* What is being demonstrated, straight from the lesson step */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 px-6 text-center">
+        <span className="inline-block rounded-full border border-ember/40 bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-ember backdrop-blur">
+          {label}
+        </span>
+        <p className="mx-auto mt-2 max-w-md text-sm text-foreground/90 drop-shadow">{action}</p>
+      </div>
     </div>
+
   );
 }
