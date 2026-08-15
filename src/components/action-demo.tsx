@@ -109,6 +109,25 @@ export function ActionDemo({
         </div>
       )}
 
+      {/* Highlight of the precise working area */}
+      <div
+        className="demo-target pointer-events-none absolute"
+        style={{ left: `${x}%`, top: `${y}%` }}
+      >
+        <span className="demo-target-ring" />
+        <span className="demo-target-core" />
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
+
+      {/* What is being demonstrated, straight from the lesson step */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 px-6 text-center">
+        <span className="inline-block rounded-full border border-ember/40 bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-ember backdrop-blur">
+          {label}
+        </span>
+        <p className="mx-auto mt-2 max-w-md text-sm text-foreground/90 drop-shadow">{action}</p>
+      </div>
     </div>
+
   );
 }
